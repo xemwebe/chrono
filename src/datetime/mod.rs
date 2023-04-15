@@ -392,6 +392,7 @@ impl<Tz: TimeZone> DateTime<Tz> {
 
     /// Retrieve the elapsed years from now to the given [`DateTime`].
     pub fn years_since(&self, base: Self) -> Option<u32> {
+        //mwb: no overflow
         let mut years = self.year() - base.year();
         let earlier_time =
             (self.month(), self.day(), self.time()) < (base.month(), base.day(), base.time());
@@ -404,6 +405,29 @@ impl<Tz: TimeZone> DateTime<Tz> {
         match years >= 0 {
             true => Some(years as u32),
             false => None,
+        }
+    }
+
+    /// Retrieve the elapsed years from now to the given [`DateTime`].
+    pub fn years_since2(&self, base: Self) -> Option<u32> {
+        let year_now = self.year();
+        let year_base = base.year();
+        if year_base>year_now {
+            return None;
+        }
+        let earlier_time = (self.month(), self.day(), self.time()) < (base.month(), base.day(), base.time());
+        if year_now==year_base && earlier_time {
+            return None;
+        }
+        let years = if year_now>0 && year_base<0 {
+            (year_now as u32) + (-year_base as u32)
+        } else {
+            (year_now-year_base) as u32
+        };
+        if earlier_time {
+            Some(years-1)
+        } else {
+            Some(years)
         }
     }
 
@@ -1335,4 +1359,22 @@ fn test_decodable_json<FUtc, FFixed, FLocal, E>(
 
     assert!(utc_from_str(r#""2014-07-32T12:34:06Z""#).is_err());
     assert!(fixed_from_str(r#""2014-07-32T12:34:06Z""#).is_err());
+}
+
+#[test]
+fn test_years_since() {
+    let date1 = Utc.with_ymd_and_hms(2018, 9, 5, 23, 58, 0).unwrap();
+    let date2 = Utc.with_ymd_and_hms(2017, 9, 5, 23, 58, 0).unwrap();
+    assert_eq!(date1.years_since(date2), Some(1));
+    assert_eq!(date1.years_since2(date2), Some(1));
+    let date2 = Utc.with_ymd_and_hms(2017, 9, 5, 23, 58, 1).unwrap();
+    assert_eq!(date1.years_since(date2), Some(0));
+    assert_eq!(date1.years_since2(date2), Some(0));
+
+    let date1 = Utc.with_ymd_and_hms(NaiveDate::MAX.year(), 9, 5, 23, 58, 0).unwrap();
+    let date2 = Utc.with_ymd_and_hms(NaiveDate::MIN.year(), 9, 5, 23, 58, 0).unwrap();
+    assert_eq!(date1.years_since(date2), Some(524287));
+    assert_eq!(date1.years_since2(date2), Some(524287));
+    assert_eq!(NaiveDate::MAX.year(), 262143);
+    assert_eq!(NaiveDate::MIN.year(), -262144);
 }

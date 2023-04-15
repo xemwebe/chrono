@@ -614,6 +614,7 @@ const fn saturating_abs(v: i32) -> i32 {
     } else if v == i32::min_value() {
         i32::max_value()
     } else {
+        //mwb: no overflow
         -v
     }
 }

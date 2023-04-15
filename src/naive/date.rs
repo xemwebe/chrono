@@ -78,6 +78,7 @@ impl NaiveWeek {
     pub fn first_day(&self) -> NaiveDate {
         let start = self.start.num_days_from_monday();
         let end = self.date.weekday().num_days_from_monday();
+        //mwb: no overflow
         let days = if start > end { 7 - start + end } else { end - start };
         self.date - TimeDelta::days(days.into())
     }
@@ -435,11 +436,15 @@ impl NaiveDate {
     /// assert_eq!(from_ndays_opt(-100_000_000), None);
     /// ```
     pub fn from_num_days_from_ce_opt(days: i32) -> Option<NaiveDate> {
-        let days = days + 365; // make December 31, 1 BCE equal to day 0
-        let (year_div_400, cycle) = div_mod_floor(days, 146_097);
-        let (year_mod_400, ordinal) = internals::cycle_to_yo(cycle as u32);
-        let flags = YearFlags::from_year_mod_400(year_mod_400 as i32);
-        NaiveDate::from_of(year_div_400 * 400 + year_mod_400 as i32, Of::new(ordinal, flags)?)
+        //mwb: no overflow (fixed)
+        if let Some(days) = days.checked_add(365) { // make December 31, 1 BCE equal to day 0
+            let (year_div_400, cycle) = div_mod_floor(days, 146_097);
+            let (year_mod_400, ordinal) = internals::cycle_to_yo(cycle as u32);
+            let flags = YearFlags::from_year_mod_400(year_mod_400 as i32);
+            NaiveDate::from_of(year_div_400 * 400 + year_mod_400 as i32, Of::new(ordinal, flags)?)
+        } else {
+            None
+        }
     }
 
     /// Makes a new `NaiveDate` by counting the number of occurrences of a particular day-of-week
@@ -479,6 +484,7 @@ impl NaiveDate {
             return None;
         }
         let first = NaiveDate::from_ymd_opt(year, month, 1)?.weekday();
+        //mwb: no overflow
         let first_to_dow = (7 + weekday.number_from_monday() - first.number_from_monday()) % 7;
         let day = (u32::from(n) - 1) * 7 + first_to_dow + 1;
         NaiveDate::from_ymd_opt(year, month, day)
@@ -679,7 +685,7 @@ impl NaiveDate {
         if days.0 == 0 {
             return Some(self);
         }
-
+        //mwb: check for underflow
         i64::try_from(days.0).ok().and_then(|d| self.diff_days(-d))
     }
 
@@ -945,6 +951,7 @@ impl NaiveDate {
     /// ```
     #[inline]
     pub fn succ_opt(&self) -> Option<NaiveDate> {
+        //mwb: no overflow
         self.with_of(self.of().succ()).or_else(|| NaiveDate::from_ymd_opt(self.year() + 1, 1, 1))
     }
 
@@ -972,6 +979,7 @@ impl NaiveDate {
     /// ```
     #[inline]
     pub fn pred_opt(&self) -> Option<NaiveDate> {
+        //mwb no overflow
         self.with_of(self.of().pred()).or_else(|| NaiveDate::from_ymd_opt(self.year() - 1, 12, 31))
     }
 
@@ -1073,6 +1081,7 @@ impl NaiveDate {
 
     /// Returns the number of whole years from the given `base` until `self`.
     pub fn years_since(&self, base: Self) -> Option<u32> {
+        //mwb no overflow
         let mut years = self.year() - base.year();
         if (self.month(), self.day()) < (base.month(), base.day()) {
             years -= 1;
@@ -1314,6 +1323,7 @@ impl Datelike for NaiveDate {
     /// ```
     #[inline]
     fn month0(&self) -> u32 {
+        //mwb: no overflow
         self.mdf().month() - 1
     }
 
@@ -1371,6 +1381,7 @@ impl Datelike for NaiveDate {
     /// ```
     #[inline]
     fn day0(&self) -> u32 {
+        //mwb: no overflow
         self.mdf().day() - 1
     }
 
@@ -1427,6 +1438,7 @@ impl Datelike for NaiveDate {
     /// ```
     #[inline]
     fn ordinal0(&self) -> u32 {
+        //mwb: no overflow
         self.of().ordinal() - 1
     }
 
@@ -1519,6 +1531,8 @@ impl Datelike for NaiveDate {
     /// ```
     #[inline]
     fn with_month0(&self, month0: u32) -> Option<NaiveDate> {
+        //mwb: no overflow (fixed)
+        if month0 > 11 { return None; }
         self.with_mdf(self.mdf().with_month(month0 + 1)?)
     }
 
@@ -1557,6 +1571,8 @@ impl Datelike for NaiveDate {
     /// ```
     #[inline]
     fn with_day0(&self, day0: u32) -> Option<NaiveDate> {
+        //mwb: no overflow (fixed)
+        if day0 > 30 { return None; }
         self.with_mdf(self.mdf().with_day(day0 + 1)?)
     }
 
@@ -1605,6 +1621,8 @@ impl Datelike for NaiveDate {
     /// ```
     #[inline]
     fn with_ordinal0(&self, ordinal0: u32) -> Option<NaiveDate> {
+        //mwb: no overflow (fixed)
+        if ordinal0 > 365 { return None; } 
         self.with_of(self.of().with_ordinal(ordinal0 + 1)?)
     }
 }

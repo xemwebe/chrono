@@ -100,6 +100,7 @@ impl FixedOffset {
     /// Returns the number of seconds to add to convert from the local time to UTC.
     #[inline]
     pub const fn utc_minus_local(&self) -> i32 {
+        //mwb: no overflow
         -self.local_minus_utc
     }
 }
@@ -191,6 +192,7 @@ impl Sub<FixedOffset> for NaiveTime {
 
     #[inline]
     fn sub(self, rhs: FixedOffset) -> NaiveTime {
+        //mwb: check for overflow
         add_with_leapsecond(&self, -rhs.local_minus_utc)
     }
 }
@@ -209,6 +211,7 @@ impl Sub<FixedOffset> for NaiveDateTime {
 
     #[inline]
     fn sub(self, rhs: FixedOffset) -> NaiveDateTime {
+        //mwb: check for overflow
         add_with_leapsecond(&self, -rhs.local_minus_utc)
     }
 }
@@ -227,6 +230,7 @@ impl<Tz: TimeZone> Sub<FixedOffset> for DateTime<Tz> {
 
     #[inline]
     fn sub(self, rhs: FixedOffset) -> DateTime<Tz> {
+        //mwb: check for overflow
         add_with_leapsecond(&self, -rhs.local_minus_utc)
     }
 }

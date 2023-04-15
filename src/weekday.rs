@@ -74,6 +74,7 @@ impl Weekday {
     /// `w.number_from_monday()`: | 1     | 2     | 3     | 4     | 5     | 6     | 7
     #[inline]
     pub const fn number_from_monday(&self) -> u32 {
+        //mwb: no overflow
         self.num_days_from(Weekday::Mon) + 1
     }
 
@@ -84,6 +85,7 @@ impl Weekday {
     /// `w.number_from_sunday()`: | 2     | 3     | 4     | 5     | 6     | 7     | 1
     #[inline]
     pub const fn number_from_sunday(&self) -> u32 {
+        //mwb: no overflow
         self.num_days_from(Weekday::Sun) + 1
     }
 

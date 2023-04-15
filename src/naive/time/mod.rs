@@ -573,6 +573,7 @@ impl NaiveTime {
     #[inline]
     pub fn overflowing_sub_signed(&self, rhs: TimeDelta) -> (NaiveTime, i64) {
         let (time, rhs) = self.overflowing_add_signed(-rhs);
+        //mwb: no overflow
         (time, -rhs) // safe to negate, rhs is within +/- (2^63 / 1000)
     }
 
@@ -643,6 +644,7 @@ impl NaiveTime {
 
         use core::cmp::Ordering;
 
+        //mwb: no overflow
         let secs = i64::from(self.secs) - i64::from(rhs.secs);
         let frac = i64::from(self.frac) - i64::from(rhs.frac);
 
@@ -878,6 +880,7 @@ impl Timelike for NaiveTime {
         if min >= 60 {
             return None;
         }
+        //mwb: no overflow
         let secs = self.secs / 3600 * 3600 + min * 60 + self.secs % 60;
         Some(NaiveTime { secs, ..*self })
     }
@@ -902,6 +905,7 @@ impl Timelike for NaiveTime {
         if sec >= 60 {
             return None;
         }
+        //mwb: no overflow
         let secs = self.secs / 60 * 60 + sec;
         Some(NaiveTime { secs, ..*self })
     }

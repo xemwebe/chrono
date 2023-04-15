@@ -56,6 +56,7 @@ pub(super) fn number(s: &str, min: usize, max: usize) -> ParseResult<(&str, i64)
             }
         }
 
+        //mwb: no overflow
         n = match n.checked_mul(10).and_then(|n| n.checked_add((c - b'0') as i64)) {
             Some(n) => n,
             None => return Err(OUT_OF_RANGE),

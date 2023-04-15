@@ -607,6 +607,7 @@ impl RuleDay {
     /// Returns the UTC Unix time in seconds associated to the transition date for the provided year
     fn unix_time(&self, year: i32, day_time_in_utc: i64) -> i64 {
         let (month, month_day) = self.transition_date(year);
+        //mwb: potential overflow
         days_since_unix_epoch(year, month, month_day) * SECONDS_PER_DAY + day_time_in_utc
     }
 }

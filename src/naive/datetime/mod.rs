@@ -376,6 +376,7 @@ impl NaiveDateTime {
         const UNIX_EPOCH_DAY: i64 = 719_163;
         let gregorian_day = i64::from(self.date.num_days_from_ce());
         let seconds_from_midnight = i64::from(self.time.num_seconds_from_midnight());
+        //mwb: potential overflow, how to deal with it?
         (gregorian_day - UNIX_EPOCH_DAY) * 86_400 + seconds_from_midnight
     }
 
@@ -405,6 +406,7 @@ impl NaiveDateTime {
     /// ```
     #[inline]
     pub fn timestamp_millis(&self) -> i64 {
+        //mwb: potential overflow, how to deal with it?
         let as_ms = self.timestamp() * 1000;
         as_ms + i64::from(self.timestamp_subsec_millis())
     }
@@ -432,6 +434,7 @@ impl NaiveDateTime {
     /// ```
     #[inline]
     pub fn timestamp_micros(&self) -> i64 {
+        //mwb: potential overflow, how to deal with it?
         let as_us = self.timestamp() * 1_000_000;
         as_us + i64::from(self.timestamp_subsec_micros())
     }
@@ -471,6 +474,7 @@ impl NaiveDateTime {
     /// ```
     #[inline]
     pub fn timestamp_nanos(&self) -> i64 {
+        //mwb: potential overflow, how to deal with it?
         let as_ns = self.timestamp() * 1_000_000_000;
         as_ns + i64::from(self.timestamp_subsec_nanos())
     }

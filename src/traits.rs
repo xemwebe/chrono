@@ -11,6 +11,7 @@ pub trait Datelike: Sized {
     fn year_ce(&self) -> (bool, u32) {
         let year = self.year();
         if year < 1 {
+            //mwb: no overflow
             (false, (1 - year) as u32)
         } else {
             (true, year as u32)
@@ -173,6 +174,7 @@ pub trait Timelike: Sized {
     /// Returns the number of non-leap seconds past the last midnight.
     #[inline]
     fn num_seconds_from_midnight(&self) -> u32 {
+        //mwb: no overflow
         self.hour() * 3600 + self.minute() * 60 + self.second()
     }
 }

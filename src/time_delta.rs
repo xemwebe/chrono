@@ -189,6 +189,7 @@ impl TimeDelta {
     pub const fn num_milliseconds(&self) -> i64 {
         // A proper Duration will not overflow, because MIN and MAX are defined
         // such that the range is exactly i64 milliseconds.
+        // mwb: no overflow
         let secs_part = self.num_seconds() * MILLIS_PER_SEC;
         let nanos_part = self.nanos_mod_sec() / NANOS_PER_MILLI;
         secs_part + nanos_part as i64
@@ -250,6 +251,7 @@ impl TimeDelta {
     #[inline]
     pub const fn abs(&self) -> TimeDelta {
         if self.secs < 0 && self.nanos != 0 {
+            //mwb: probably no overflow
             TimeDelta { secs: (self.secs + 1).abs(), nanos: NANOS_PER_SEC - self.nanos }
         } else {
             TimeDelta { secs: self.secs.abs(), nanos: self.nanos }
@@ -315,6 +317,7 @@ impl Neg for TimeDelta {
     #[inline]
     fn neg(self) -> TimeDelta {
         if self.nanos == 0 {
+            //mwb: now overflow
             TimeDelta { secs: -self.secs, nanos: 0 }
         } else {
             TimeDelta { secs: -self.secs - 1, nanos: NANOS_PER_SEC - self.nanos }
@@ -326,6 +329,7 @@ impl Add for TimeDelta {
     type Output = TimeDelta;
 
     fn add(self, rhs: TimeDelta) -> TimeDelta {
+        //mwb: check for overflow
         let mut secs = self.secs + rhs.secs;
         let mut nanos = self.nanos + rhs.nanos;
         if nanos >= NANOS_PER_SEC {
@@ -340,6 +344,7 @@ impl Sub for TimeDelta {
     type Output = TimeDelta;
 
     fn sub(self, rhs: TimeDelta) -> TimeDelta {
+        //mwb: check for overflow
         let mut secs = self.secs - rhs.secs;
         let mut nanos = self.nanos - rhs.nanos;
         if nanos < 0 {
@@ -355,6 +360,7 @@ impl Mul<i32> for TimeDelta {
 
     fn mul(self, rhs: i32) -> TimeDelta {
         // Multiply nanoseconds as i64, because it cannot overflow that way.
+        //mwb: no overflow
         let total_nanos = self.nanos as i64 * rhs as i64;
         let (extra_secs, nanos) = div_mod_floor_64(total_nanos, NANOS_PER_SEC as i64);
         let secs = self.secs * rhs as i64 + extra_secs;
@@ -465,6 +471,7 @@ const fn div_mod_floor_64(this: i64, other: i64) -> (i64, i64) {
 #[inline]
 const fn div_floor_64(this: i64, other: i64) -> i64 {
     match div_rem_64(this, other) {
+        //mwb: potential overflow
         (d, r) if (r > 0 && other < 0) || (r < 0 && other > 0) => d - 1,
         (d, _) => d,
     }
