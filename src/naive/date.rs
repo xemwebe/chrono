@@ -979,7 +979,7 @@ impl NaiveDate {
     /// ```
     #[inline]
     pub fn pred_opt(&self) -> Option<NaiveDate> {
-        //mwb no overflow
+        //mwb: no overflow
         self.with_of(self.of().pred()).or_else(|| NaiveDate::from_ymd_opt(self.year() - 1, 12, 31))
     }
 
@@ -1081,7 +1081,7 @@ impl NaiveDate {
 
     /// Returns the number of whole years from the given `base` until `self`.
     pub fn years_since(&self, base: Self) -> Option<u32> {
-        //mwb no overflow
+        //mwb: no overflow
         let mut years = self.year() - base.year();
         if (self.month(), self.day()) < (base.month(), base.day()) {
             years -= 1;

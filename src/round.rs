@@ -6,6 +6,7 @@ use crate::naive::NaiveDateTime;
 use crate::time_delta::TimeDelta;
 use crate::TimeZone;
 use crate::Timelike;
+use crate::utils::Integer;
 use core::cmp::Ordering;
 use core::fmt;
 use core::marker::Sized;
@@ -188,8 +189,8 @@ where
         if span == 0 {
             return Ok(original);
         }
-        //mwb: potential overflow is span is negativ
-        let delta_down = stamp % span;
+        //mwb: no overflow (fixed)
+        let delta_down = stamp.safe_mod(span);
         if delta_down == 0 {
             Ok(original)
         } else {

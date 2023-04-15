@@ -8,6 +8,7 @@ pub(crate) trait Integer: Copy {
     fn div_rem(self, other: Self) -> (Self, Self);
     fn div_floor(self, other: Self) -> Self;
     fn mod_floor(self, other: Self) -> Self;
+    fn safe_mod(self, other: Self) -> Self;
 }
 
 // Implements the Integer trait for a signed integer type.
@@ -16,7 +17,7 @@ macro_rules! impl_integer_signed {
         impl Integer for $t {
             #[inline]
             fn div_rem(self, other: Self) -> (Self, Self) {
-                (self / other, self % other)
+                (self / other, self.safe_mod(other))
             }
 
             #[inline]
@@ -35,11 +36,20 @@ macro_rules! impl_integer_signed {
             fn mod_floor(self, other: Self) -> Self {
                 // Algorithm from [Daan Leijen. _Division and Modulus for Computer Scientists_,
                 // December 2001](http://research.microsoft.com/pubs/151917/divmodnote-letter.pdf)
-                let r = self % other;
+                let r = self.safe_mod(other);
                 if (r > 0 && other < 0) || (r < 0 && other > 0) {
                     r + other
                 } else {
                     r
+                }
+            }
+
+            #[inline]
+            fn safe_mod(self, other: Self) -> Self {
+                if self==Self::MIN && other==-1 {
+                    0
+                } else {
+                    self % other
                 }
             }
         }
@@ -62,6 +72,11 @@ macro_rules! impl_integer_unsigned {
 
             #[inline]
             fn mod_floor(self, other: Self) -> Self {
+                self % other
+            }
+
+            #[inline]
+            fn safe_mod(self, other: Self) -> Self {
                 self % other
             }
         }
