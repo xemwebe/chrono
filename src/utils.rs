@@ -83,9 +83,9 @@ macro_rules! impl_integer_unsigned {
     };
 }
 
-//mwb: check for overflow
+//mwb: no overflow (fixed)
 impl_integer_signed!(i32);
-//mwb: check for overflow
+//mwb: no overflow (fixed)
 impl_integer_signed!(i64);
 impl_integer_unsigned!(u32);
 
