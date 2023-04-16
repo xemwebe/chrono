@@ -17,6 +17,7 @@ macro_rules! impl_integer_signed {
         impl Integer for $t {
             #[inline]
             fn div_rem(self, other: Self) -> (Self, Self) {
+                //mwb: overflows if self==T::MIN && other==-1
                 (self / other, self.safe_mod(other))
             }
 

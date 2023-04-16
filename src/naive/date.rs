@@ -685,7 +685,7 @@ impl NaiveDate {
         if days.0 == 0 {
             return Some(self);
         }
-        //mwb: check for underflow
+        //mwb: no overflow
         i64::try_from(days.0).ok().and_then(|d| self.diff_days(-d))
     }
 

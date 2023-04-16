@@ -251,7 +251,7 @@ impl TimeDelta {
     #[inline]
     pub const fn abs(&self) -> TimeDelta {
         if self.secs < 0 && self.nanos != 0 {
-            //mwb: probably no overflow
+            //mwb: no overflow
             TimeDelta { secs: (self.secs + 1).abs(), nanos: NANOS_PER_SEC - self.nanos }
         } else {
             TimeDelta { secs: self.secs.abs(), nanos: self.nanos }
@@ -317,9 +317,10 @@ impl Neg for TimeDelta {
     #[inline]
     fn neg(self) -> TimeDelta {
         if self.nanos == 0 {
-            //mwb: now overflow
+            //mwb: overflows if self.secs = i64::MIN
             TimeDelta { secs: -self.secs, nanos: 0 }
         } else {
+            //mwb: overflows if self.secs = i64::MIN
             TimeDelta { secs: -self.secs - 1, nanos: NANOS_PER_SEC - self.nanos }
         }
     }
@@ -363,6 +364,7 @@ impl Mul<i32> for TimeDelta {
         //mwb: no overflow
         let total_nanos = self.nanos as i64 * rhs as i64;
         let (extra_secs, nanos) = div_mod_floor_64(total_nanos, NANOS_PER_SEC as i64);
+        //mwb: check for overflow
         let secs = self.secs * rhs as i64 + extra_secs;
         TimeDelta { secs, nanos: nanos as i32 }
     }
@@ -372,6 +374,7 @@ impl Div<i32> for TimeDelta {
     type Output = TimeDelta;
 
     fn div(self, rhs: i32) -> TimeDelta {
+        //mwb: overflows if (self.secs==i64::MIN && rhs=-1) || rhs==0
         let mut secs = self.secs / rhs as i64;
         let carry = self.secs - secs * rhs as i64;
         let extra_nanos = carry * NANOS_PER_SEC as i64 / rhs as i64;
@@ -777,4 +780,5 @@ mod tests {
             Err(OutOfRangeError(()))
         );
     }
+
 }
